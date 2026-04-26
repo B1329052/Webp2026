@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>景點觀光展覽資訊</title>
+
+    <style>
+        body {
+            font-family: Arial, "Microsoft JhengHei", sans-serif;
+            padding: 30px;
+        }
+
+        h1 {
+            display: inline-block;
+            margin-right: 30px;
+        }
+
+        input {
+            font-size: 20px;
+            padding: 8px;
+            width: 280px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+            font-size: 18px;
+        }
+
+        th {
+            background-color: #00a86b;
+            color: white;
+            text-align: left;
+            padding: 12px;
+        }
+
+        td {
+            padding: 12px;
+            border: 1px solid #ddd;
+        }
+
+        tr:nth-child(even) {
+            background-color: #eeeeee;
+        }
+
+        tr:nth-child(odd) {
+            background-color: #ffffff;
+        }
+
+        .page-area {
+            margin-top: 25px;
+            font-size: 20px;
+        }
+
+        button {
+            font-size: 18px;
+            padding: 6px 14px;
+            margin: 0 6px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>景點觀光展覽資訊</h1>
+
+    <input type="text" id="searchInput" onchange="searchData()" placeholder="請輸入名稱關鍵字">
+
+    <table>
+        <thead>
+            <tr>
+                <th>名稱</th>
+                <th>地點</th>
+                <th>票價</th>
+            </tr>
+        </thead>
+
+        <tbody id="tableBody">
+        </tbody>
+    </table>
+
+    <div class="page-area">
+        <button onclick="prevPage()">上一頁</button>
+        <span id="pageInfo">1 / 1 頁</span>
+        <button onclick="nextPage()">下一頁</button>
+    </div>
+
+    <script>
+        var openUrl = "https://cloud.culture.tw/frontsite/trans/SearchShowAction.do?method=doFindTypeJ&category=6";
+
+        var allData = [];
+        var showData = [];
+
+        var currentPage = 1;
+        var perPage = 10;
+        var totalPage = 1;
+
+        window.onload = function () {
+            getData();
+        };
+
+        function getData() {
+            var xhr = new XMLHttpRequest();
+
+            xhr.open("GET", openUrl, true);
+            xhr.send();
+
+            xhr.onload = function () {
+                var data = JSON.parse(this.responseText);
+
+                allData = data;
+                showData = allData;
+
+                currentPage = 1;
+                updateTable();
+            };
+        }
+
+        function updateTable() {
+            var tableBody = document.getElementById("tableBody");
+            tableBody.innerHTML = "";
+
+            totalPage = Math.ceil(showData.length / perPage);
+
+            if (totalPage == 0) {
+                totalPage = 1;
+            }
+
+            var start = (currentPage - 1) * perPage;
+            var end = start + perPage;
+
+            var pageData = showData.slice(start, end);
+
+            pageData.forEach(function (item) {
+                var tr = document.createElement("tr");
+
+                var nameTd = document.createElement("td");
+                var locationTd = document.createElement("td");
+                var priceTd = document.createElement("td");
+
+                nameTd.textContent = item.title;
+
+                if (item.showInfo && item.showInfo.length > 0) {
+                    locationTd.textContent = item.showInfo[0].location;
+                    priceTd.textContent = item.showInfo[0].price;
+                } else {
+                    locationTd.textContent = "";
+                    priceTd.textContent = "";
+                }
+
+                tr.appendChild(nameTd);
+                tr.appendChild(locationTd);
+                tr.appendChild(priceTd);
+
+                tableBody.appendChild(tr);
+            });
+
+            document.getElementById("pageInfo").textContent = currentPage + " / " + totalPage + " 頁";
+        }
+
+        function nextPage() {
+            if (currentPage < totalPage) {
+                currentPage++;
+                updateTable();
+            }
+        }
+
+        function prevPage() {
+            if (currentPage > 1) {
+                currentPage--;
+                updateTable();
+            }
+        }
+
+        function searchData() {
+            var keyword = document.getElementById("searchInput").value;
+
+            showData = allData.filter(function (item) {
+                return item.title.indexOf(keyword) !== -1;
+            });
+
+            currentPage = 1;
+            updateTable();
+        }
+    </script>
+
+</body>
+</html>
